@@ -18,8 +18,21 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpFoundation\File\File as FileObject;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+/**
+ * @api
+ */
 class FileValidator extends ConstraintValidator
 {
+    /**
+     * Checks if the passed value is valid.
+     *
+     * @param mixed      $value      The value that should be validated
+     * @param Constraint $constraint The constraint for the validation
+     *
+     * @return Boolean Whether or not the value is valid
+     *
+     * @api
+     */
     public function isValid($value, Constraint $constraint)
     {
         if (null === $value || '' === $value) {
@@ -29,15 +42,7 @@ class FileValidator extends ConstraintValidator
         if ($value instanceof UploadedFile && !$value->isValid()) {
             switch ($value->getError()) {
                 case UPLOAD_ERR_INI_SIZE:
-                    $maxSize = trim(ini_get('upload_max_filesize'));
-                    switch (strtolower(substr($maxSize, -1))) {
-                        case 'g':
-                            $maxSize *= 1024;
-                        case 'm':
-                            $maxSize *= 1024;
-                        case 'k':
-                            $maxSize *= 1024;
-                    }
+                    $maxSize = UploadedFile::getMaxFilesize();
                     $maxSize = $constraint->maxSize ? min($maxSize, $constraint->maxSize) : $maxSize;
                     $this->setMessage($constraint->uploadIniSizeErrorMessage, array('{{ limit }}' => $maxSize.' bytes'));
 
@@ -59,7 +64,7 @@ class FileValidator extends ConstraintValidator
 
         $path = $value instanceof FileObject ? $value->getPathname() : (string) $value;
 
-        if (!file_exists($path)) {
+        if (!is_file($path)) {
             $this->setMessage($constraint->notFoundMessage, array('{{ file }}' => $path));
 
             return false;

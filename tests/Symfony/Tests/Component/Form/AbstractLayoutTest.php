@@ -148,6 +148,23 @@ abstract class AbstractLayoutTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testLabelOnForm()
+    {
+        $form = $this->factory->createNamed('date', 'na&me', null, array(
+            'property_path' => 'name',
+        ));
+        $view = $form->createView();
+        $this->renderWidget($view, array('label' => 'foo'));
+        $html = $this->renderLabel($view);
+
+        $this->assertMatchesXpath($html,
+'/label
+    [@class=" required"]
+    [.="[trans]Na&me[/trans]"]
+'
+        );
+    }
+
     public function testLabelWithCustomTextPassedAsOption()
     {
         $form = $this->factory->createNamed('text', 'na&me', null, array(
@@ -209,7 +226,7 @@ abstract class AbstractLayoutTest extends \PHPUnit_Framework_TestCase
         $this->assertMatchesXpath($html,
 '/label
     [@for="na&me"]
-    [@class="my&class"]
+    [@class="my&class required"]
 '
         );
     }
@@ -228,7 +245,7 @@ abstract class AbstractLayoutTest extends \PHPUnit_Framework_TestCase
         $this->assertMatchesXpath($html,
 '/label
     [@for="na&me"]
-    [@class="my&class"]
+    [@class="my&class required"]
     [.="[trans]Custom label[/trans]"]
 '
         );
@@ -362,6 +379,23 @@ abstract class AbstractLayoutTest extends \PHPUnit_Framework_TestCase
         /following-sibling::option[@value="&a"][@selected="selected"][.="[trans]Choice&A[/trans]"]
     ]
     [count(./option)=3]
+'
+        );
+    }
+
+    public function testChoiceWithOnlyPreferred()
+    {
+        $form = $this->factory->createNamed('choice', 'na&me', '&a', array(
+            'property_path' => 'name',
+            'choices' => array('&a' => 'Choice&A', '&b' => 'Choice&B'),
+            'preferred_choices' => array('&a', '&b'),
+            'multiple' => false,
+            'expanded' => false,
+        ));
+
+        $this->assertWidgetMatchesXpath($form->createView(), array(),
+'/select
+    [count(./option)=2]
 '
         );
     }
@@ -1675,9 +1709,10 @@ abstract class AbstractLayoutTest extends \PHPUnit_Framework_TestCase
         $html = $this->renderWidget($form);
 
         $this->assertMatchesXpath($html,
-'//script
-    [@id="na&me_items_prototype"]
-    [@type="text/html"]
+            '//div[@id="na&me_items"][@data-prototype]
+            |
+             //table[@id="na&me_items"][@data-prototype]
+
 '
         );
     }

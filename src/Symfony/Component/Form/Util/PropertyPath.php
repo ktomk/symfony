@@ -55,7 +55,7 @@ class PropertyPath implements \IteratorAggregate
      */
     public function __construct($propertyPath)
     {
-        if ('' === $propertyPath || null === $propertyPath) {
+        if (null === $propertyPath) {
             throw new InvalidPropertyPathException('The property path must not be empty');
         }
 
@@ -349,7 +349,7 @@ class PropertyPath implements \IteratorAggregate
                 $objectOrArray->$property = $value;
             } else if ($reflClass->hasProperty($property)) {
                 if (!$reflClass->getProperty($property)->isPublic()) {
-                    throw new PropertyAccessDeniedException(sprintf('Property "%s" is not public in class "%s". Maybe you should create the method "set%s()"?', $property, $reflClass->getName(), $setter));
+                    throw new PropertyAccessDeniedException(sprintf('Property "%s" is not public in class "%s". Maybe you should create the method "%s()"?', $property, $reflClass->getName(), $setter));
                 }
 
                 $objectOrArray->$property = $value;

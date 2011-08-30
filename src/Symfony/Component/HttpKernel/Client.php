@@ -24,6 +24,8 @@ use Symfony\Component\BrowserKit\CookieJar;
  * Client simulates a browser and makes requests to a Kernel object.
  *
  * @author Fabien Potencier <fabien@symfony.com>
+ *
+ * @api
  */
 class Client extends BaseClient
 {
@@ -65,13 +67,13 @@ class Client extends BaseClient
      */
     protected function getScript($request)
     {
-        $kernel = serialize($this->kernel);
-        $request = serialize($request);
+        $kernel = str_replace("'", "\\'", serialize($this->kernel));
+        $request = str_replace("'", "\\'", serialize($request));
 
         $r = new \ReflectionClass('\\Symfony\\Component\\ClassLoader\\UniversalClassLoader');
-        $requirePath = $r->getFileName();
+        $requirePath = str_replace("'", "\\'", $r->getFileName());
 
-        $symfonyPath = realpath(__DIR__.'/../../..');
+        $symfonyPath = str_replace("'", "\\'", realpath(__DIR__.'/../../..'));
 
         return <<<EOF
 <?php
@@ -125,7 +127,7 @@ EOF;
             if (is_array($value)) {
                 $filtered[$key] = $this->filterFiles($value);
             } elseif ($value instanceof UploadedFile) {
-                if ($value->isValid() && $value->getSize() > static::getMaxUploadFilesize()) {
+                if ($value->isValid() && $value->getSize() > UploadedFile::getMaxFilesize()) {
                     $filtered[$key] = new UploadedFile(
                         '',
                         $value->getClientOriginalName(),
@@ -171,30 +173,5 @@ EOF;
         }
 
         return new DomResponse($response->getContent(), $response->getStatusCode(), $headers);
-    }
-
-    /**
-     * Returns the maximum size of an uploaded file
-     *
-     * @return type The maximum size of an uploaded file in bytes
-     */
-    static protected function getMaxUploadFilesize()
-    {
-        $max = trim(ini_get('upload_max_filesize'));
-
-        if ('' === $max) {
-            return PHP_INT_MAX;
-        }
-
-        switch (strtolower(substr($max, -1))) {
-            case 'g':
-                $max *= 1024;
-            case 'm':
-                $max *= 1024;
-            case 'k':
-                $max *= 1024;
-        }
-
-        return (integer) $max;
     }
 }

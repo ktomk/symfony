@@ -35,8 +35,9 @@ class DialogHelper extends Helper
     {
         $output->write($question);
 
-        if (false === $ret = fgets(null === $this->inputStream ? STDIN : $this->inputStream)) {
-            throw new \Exception('Aborted');
+        $ret = fgets($this->inputStream ?: STDIN, 4096);
+        if (false === $ret) {
+            throw new \RuntimeException('Aborted');
         }
         $ret = trim($ret);
 

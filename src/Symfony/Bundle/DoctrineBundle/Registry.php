@@ -218,18 +218,23 @@ class Registry implements RegistryInterface
     }
 
     /**
-     * Gets the entity manager associated with a given object.
+     * Gets the entity manager associated with a given class.
      *
-     * @param object $object A Doctrine Entity
+     * @param string $class A Doctrine Entity class name
      *
      * @return EntityManager|null
      */
-    public function getEntityManagerForObject($object)
+    public function getEntityManagerForClass($class)
     {
+        $proxyClass = new \ReflectionClass($class);
+        if ($proxyClass->implementsInterface('Doctrine\ORM\Proxy\Proxy')) {
+            $class = $proxyClass->getParentClass()->getName();
+        }
+
         foreach ($this->entityManagers as $id) {
             $em = $this->container->get($id);
 
-            if ($em->getConfiguration()->getMetadataDriverImpl()->isTransient($object)) {
+            if (!$em->getConfiguration()->getMetadataDriverImpl()->isTransient($class)) {
                 return $em;
             }
         }

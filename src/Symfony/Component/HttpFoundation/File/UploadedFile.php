@@ -20,6 +20,8 @@ use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
  * @author Bernhard Schussek <bernhard.schussek@symfony.com>
  * @author Florian Eckerstorfer <florian@eckerstorfer.org>
  * @author Fabien Potencier <fabien@symfony.com>
+ *
+ * @api
  */
 class UploadedFile extends File
 {
@@ -83,6 +85,8 @@ class UploadedFile extends File
      *
      * @throws FileException         If file_uploads is disabled
      * @throws FileNotFoundException If the file does not exist
+     *
+     * @api
      */
     public function __construct($path, $originalName, $mimeType = null, $size = null, $error = null, $test = false)
     {
@@ -108,6 +112,8 @@ class UploadedFile extends File
      * Then is should not be considered as a safe value.
      *
      * @return string|null The original name
+     *
+     * @api
      */
     public function getClientOriginalName()
     {
@@ -121,6 +127,8 @@ class UploadedFile extends File
      * Then is should not be considered as a safe value.
      *
      * @return string|null The mime type
+     *
+     * @api
      */
     public function getClientMimeType()
     {
@@ -134,6 +142,8 @@ class UploadedFile extends File
      * Then is should not be considered as a safe value.
      *
      * @return integer|null The file size
+     *
+     * @api
      */
     public function getClientSize()
     {
@@ -147,6 +157,8 @@ class UploadedFile extends File
      * Otherwise one of the other UPLOAD_ERR_XXX constants is returned.
      *
      * @return integer The upload error
+     *
+     * @api
      */
     public function getError()
     {
@@ -157,6 +169,8 @@ class UploadedFile extends File
      * Returns whether the file was uploaded successfully.
      *
      * @return Boolean  True if no error occurred during uploading
+     *
+     * @api
      */
     public function isValid()
     {
@@ -172,6 +186,8 @@ class UploadedFile extends File
      * @return File A File object representing the new file
      *
      * @throws FileException if the file has not been uploaded via Http
+     *
+     * @api
      */
     public function move($directory, $name = null)
     {
@@ -180,5 +196,30 @@ class UploadedFile extends File
         }
 
         throw new FileException(sprintf('The file "%s" has not been uploaded via Http', $this->getPathname()));
+    }
+
+    /**
+     * Returns the maximum size of an uploaded file as configured in php.ini
+     *
+     * @return type The maximum size of an uploaded file in bytes
+     */
+    static public function getMaxFilesize()
+    {
+        $max = trim(ini_get('upload_max_filesize'));
+
+        if ('' === $max) {
+            return PHP_INT_MAX;
+        }
+
+        switch (strtolower(substr($max, -1))) {
+            case 'g':
+                $max *= 1024;
+            case 'm':
+                $max *= 1024;
+            case 'k':
+                $max *= 1024;
+        }
+
+        return (integer) $max;
     }
 }
